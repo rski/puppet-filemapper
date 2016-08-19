@@ -1,17 +1,16 @@
 require 'spec_helper'
 require 'puppetx/filemapper'
 
-# rubocop:disable RSpec/InstanceVariable
 # rubocop:disable RSpec/DescribedClass
 
 describe PuppetX::FileMapper do
-  before do
-    @ramtype  = Puppet::Util::FileType.filetype(:ram)
-    @flattype = stub 'Class<FileType<Flat>>'
-    @crontype = stub 'Class<FileType<Crontab>>'
+  let(:ramtype) { Puppet::Util::FileType.filetype(:ram) }
+  let(:flattype) { stub 'Class<FileType<Flat>>' }
+  let(:crontype) { stub 'Class<FileType<Crontab>>' }
 
-    Puppet::Util::FileType.stubs(:filetype).with(:flat).returns(@flattype)
-    Puppet::Util::FileType.stubs(:filetype).with(:crontab).returns(@crontype)
+  before do
+    Puppet::Util::FileType.stubs(:filetype).with(:flat).returns(flattype)
+    Puppet::Util::FileType.stubs(:filetype).with(:crontab).returns(crontype)
   end
 
   after :each do
@@ -175,19 +174,19 @@ describe PuppetX::FileMapper do
       subject { single_file_provider }
 
       it 'generates a filetype for that file' do
-        @flattype.expects(:new).with('/single/file/provider').once.returns @ramtype.new('/single/file/provider')
+        flattype.expects(:new).with('/single/file/provider').once.returns ramtype.new('/single/file/provider')
         subject.load_all_providers_from_disk
       end
 
       it 'parses each file' do
         stub_file = stub(read: 'file contents')
-        @flattype.stubs(:new).with('/single/file/provider').once.returns stub_file
+        flattype.stubs(:new).with('/single/file/provider').once.returns stub_file
         subject.expects(:parse_file).with('/single/file/provider', 'file contents').returns []
         subject.load_all_providers_from_disk
       end
 
       it 'returns the generated array' do
-        @flattype.stubs(:new).with('/single/file/provider').once.returns @ramtype.new('/single/file/provider')
+        flattype.stubs(:new).with('/single/file/provider').once.returns ramtype.new('/single/file/provider')
         expect(subject.load_all_providers_from_disk).to eq([params_yay])
       end
     end
@@ -196,15 +195,15 @@ describe PuppetX::FileMapper do
       subject { multiple_file_provider }
 
       it 'generates a filetype for each file' do
-        @flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
-        @flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
+        flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
+        flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
         subject.load_all_providers_from_disk
       end
 
       describe 'when parsing' do
         before do
-          @flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
-          @flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
+          flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
+          flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
         end
 
         it 'parses each file' do
@@ -225,8 +224,8 @@ describe PuppetX::FileMapper do
       subject { multiple_file_provider }
 
       before do
-        @flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
-        @flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
+        flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
+        flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
       end
 
       it 'ensures that retrieved values are in the right format' do
@@ -242,8 +241,8 @@ describe PuppetX::FileMapper do
     subject { multiple_file_provider }
 
     before do
-      @flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
-      @flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
+      flattype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
+      flattype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
     end
 
     it 'generates a provider instance from hashes' do
@@ -395,7 +394,7 @@ describe PuppetX::FileMapper do
   describe 'when flushing' do
     subject { multiple_file_provider }
 
-    let(:newtype) { @ramtype.new('/multiple/file/provider-flush') }
+    let(:newtype) { ramtype.new('/multiple/file/provider-flush') }
     let(:resource) { dummytype.new(params_yay) }
 
     before { newtype.stubs(:backup) }
@@ -407,7 +406,7 @@ describe PuppetX::FileMapper do
 
     it 'generates filetypes for new files' do
       subject.dirty_file!('/multiple/file/provider-flush')
-      @flattype.expects(:new).with('/multiple/file/provider-flush').returns newtype
+      flattype.expects(:new).with('/multiple/file/provider-flush').returns newtype
       resource.flush
     end
 
@@ -449,7 +448,7 @@ describe PuppetX::FileMapper do
   describe 'when unlinking empty files' do
     subject { multiple_file_provider }
 
-    let(:newtype) { @ramtype.new('/multiple/file/provider-flush') }
+    let(:newtype) { ramtype.new('/multiple/file/provider-flush') }
 
     before do
       subject.unlink_empty_files = true
@@ -460,7 +459,7 @@ describe PuppetX::FileMapper do
     describe 'with empty file contents' do
       before do
         subject.dirty_file!('/multiple/file/provider-flush')
-        @flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
+        flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
         File.stubs(:exist?).with('/multiple/file/provider-flush').returns true
 
         subject.stubs(:format_file).returns ''
@@ -485,7 +484,7 @@ describe PuppetX::FileMapper do
     describe 'with empty file contents and no destination file' do
       before do
         subject.dirty_file!('/multiple/file/provider-flush')
-        @flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
+        flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
         File.stubs(:exist?).with('/multiple/file/provider-flush').returns false
 
         subject.stubs(:format_file).returns ''
@@ -506,7 +505,7 @@ describe PuppetX::FileMapper do
     describe 'with a non-empty file' do
       before do
         subject.dirty_file!('/multiple/file/provider-flush')
-        @flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
+        flattype.stubs(:new).with('/multiple/file/provider-flush').returns newtype
         File.stubs(:exist?).with('/multiple/file/provider-flush').returns true
 
         subject.stubs(:format_file).returns 'not empty'
@@ -527,8 +526,8 @@ describe PuppetX::FileMapper do
     end
 
     it 'assigns that filetype to loaded files' do
-      @crontype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
-      @crontype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
+      crontype.expects(:new).with('/multiple/file/provider-one').once.returns(stub(read: 'barbar'))
+      crontype.expects(:new).with('/multiple/file/provider-two').once.returns(stub(read: 'bazbaz'))
 
       subject.load_all_providers_from_disk
     end
@@ -569,7 +568,7 @@ describe PuppetX::FileMapper do
       subject.dirty_file!('/multiple/file/provider-flush')
     end
 
-    let(:newtype) { @ramtype.new('/multiple/file/provider-flush') }
+    let(:newtype) { ramtype.new('/multiple/file/provider-flush') }
 
     it 'is called in order' do
       seq = sequence('flush')
