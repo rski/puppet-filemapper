@@ -2,7 +2,6 @@ require 'spec_helper'
 require 'puppetx/filemapper'
 
 # rubocop:disable RSpec/InstanceVariable
-# rubocop:disable RSpec/AnyInstance
 # rubocop:disable RSpec/DescribedClass
 
 describe PuppetX::FileMapper do
@@ -308,7 +307,6 @@ describe PuppetX::FileMapper do
 
     before do
       dummytype.defaultprovider = subject
-      subject.any_instance.stubs(:resource_type).returns(dummytype)
       subject.mapped_files['/multiple/file/provider-flush'][:dirty] = false
     end
 
@@ -370,7 +368,6 @@ describe PuppetX::FileMapper do
 
     before do
       dummytype.defaultprovider = subject
-      subject.any_instance.stubs(:resource_type).returns dummytype
     end
 
     let(:resource) { dummytype.new(params_yay) }
@@ -614,7 +611,6 @@ describe PuppetX::FileMapper do
 
     before do
       dummytype.defaultprovider = provider_class
-      provider_class.any_instance.stubs(:resource_type).returns dummytype
 
       provider_class.stubs(:instances).returns provider_stubs
       provider_class.prefetch(resource_stubs.each_with_object({}) { |r, h| h[r.name] = r })
